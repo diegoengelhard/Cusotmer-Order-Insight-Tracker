@@ -1,0 +1,213 @@
+html,
+body {
+    height: 100%;
+}
+
+body.app-body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background-color: #f5f5f8;
+    color: #111827;
+}
+
+a {
+    color: #2563eb;
+    text-decoration: none;
+}
+
+a:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+
+.crm-page {
+    max-width: 1120px;
+    margin: 40px auto 48px auto;
+    padding: 0 16px;
+}
+
+.crm-title {
+    font-size: 2.1rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #111827;
+}
+
+.crm-subtitle {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #111827;
+}
+
+.crm-card {
+    background-color: #ffffff;
+    border-radius: 16px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
+}
+
+
+.crm-card-search {
+    padding-top: 20px !important;
+    padding-bottom: 20px !important;
+}
+
+.crm-card-results {
+    overflow: hidden;
+}
+
+.border-bottom-light {
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.crm-search-group {
+    border-radius: 999px;
+    overflow: hidden;
+    background-color: #f9fafb;
+    border: 1px solid #e5e7eb;
+}
+
+.crm-search-icon {
+    border: none;
+    background-color: transparent;
+    font-size: 0.95rem;
+    color: #9ca3af;
+}
+
+.crm-search-input {
+    border: none !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    padding-left: 2px;
+    font-size: 0.95rem;
+}
+
+.crm-search-input::placeholder {
+    color: #9ca3af;
+}
+
+.crm-search-input:focus {
+    outline: none;
+}
+
+.crm-search-hint {
+    font-size: 0.80rem;
+    color: #9ca3af;
+}
+
+
+.btn-primary {
+    background-color: #2563eb;
+    border-color: #2563eb;
+    border-radius: 999px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: #1d4ed8;
+    border-color: #1d4ed8;
+}
+
+.crm-action-btn {
+    border-radius: 999px;
+    font-size: 0.8rem;
+    padding-inline: 16px;
+}
+
+.crm-link {
+    font-weight: 500;
+}
+
+.crm-back-link {
+    font-size: 0.9rem;
+    color: #2563eb;
+}
+
+.crm-back-link:hover {
+    color: #1d4ed8;
+    text-decoration: underline;
+}
+
+.k-grid {
+    border: none;
+    font-size: 0.875rem;
+}
+
+.k-grid .k-table {
+    border-collapse: collapse;
+}
+
+/* header */
+
+.k-grid-header {
+    background-color: #f9fafb;
+}
+
+.k-grid-header .k-table-th {
+    font-weight: 600;
+    font-size: 0.80rem;
+    color: #6b7280;
+    border-bottom: 1px solid #e5e7eb;
+    border-top: none;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.k-grid .k-table-td {
+    border-color: #f3f4f6;
+    padding-top: 9px;
+    padding-bottom: 9px;
+    color: #374151;
+}
+
+
+.k-grid .k-alt {
+    background-color: #fcfcfd;
+}
+
+
+.k-grid-norecords {
+    color: #6b7280;
+    font-size: 0.85rem;
+}
+
+/* pager */
+.k-pager-wrap {
+    border-top: 1px solid #e5e7eb;
+    background-color: #ffffff;
+    padding-top: 6px;
+    padding-bottom: 6px;
+}
+
+.k-pager-wrap .k-button {
+    border-radius: 8px;
+    font-size: 0.8rem;
+} 
+
+/* page number */
+
+.k-pager-numbers .k-selected,
+.k-pager-numbers .k-selected *,
+.k-pager-numbers .k-button.k-selected,
+.k-pager-numbers .k-button.k-selected *,
+.k-pager-numbers .k-button.k-selected .k-button-text {
+    background-color: #2563eb !important;
+    border-color: #2563eb !important;
+    color: #ffffff !important;
+}
+@media (max-width: 768px) {
+    .crm-page {
+        margin-top: 24px;
+    }
+
+    .crm-title {
+        font-size: 1.6rem;
+    }
+
+    .crm-card-search {
+        padding: 16px !important;
+    }
+}

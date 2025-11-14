@@ -1,0 +1,142 @@
+@model IEnumerable<Creativa.Web.Models.Customer>
+
+@{
+    ViewData["Title"] = "Northwind Customers";
+    var country = (ViewBag.Country as string) ?? "";
+}
+
+<div class="crm-page">
+    @* Heading *@
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h1 class="crm-title mb-1">Clientes por país</h1>
+        </div>
+    </div>
+
+    @* Search Section *@
+    <div class="crm-card crm-card-search p-3 p-md-4 mb-3">
+        <form asp-action="CustomersByCountry" method="get" id="countrySearchForm">
+            <div class="row g-2 align-items-center">
+                <div class="col-md-7">
+                    <div class="input-group crm-search-group">
+                        <span class="input-group-text crm-search-icon">
+                            🔍
+                        </span>
+                        <input type="text"
+                               class="form-control crm-search-input"
+                               id="country"
+                               name="country"
+                               value="@country"
+                               placeholder="Buscar por país (ej. Germany, USA, Mexico)..." />
+                    </div>
+                </div>
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary px-4">
+                        Buscar
+                    </button>
+                </div>
+            </div>
+            <p class="crm-search-hint mt-2 mb-0">
+                Escribe un país y presiona <strong>Buscar</strong> para ver los clientes registrados.
+            </p>
+        </form>
+    </div>
+
+    @* Results Card (Kendo Grid) *@
+    <div id="customersGridWrapper" class="crm-card crm-card-results p-0" style="display:none;">
+        <div class="p-3 p-md-4 pb-2 border-bottom-light">
+            <h2 class="crm-subtitle mb-1">Resultados</h2>
+            <p class="text-muted small mb-0">
+                Listado de clientes filtrados por país.
+            </p>
+        </div>
+        <div class="p-0">
+            <div id="customersGrid"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var initialCountry = '@country';
+            var dataUrl = '@Url.Action("CustomersByCountryData", "Customers")';
+            var ordersBaseUrl = '@Url.Action("CustomerOrdersInformation", "Customers")';
+
+            var grid = $("#customersGrid").kendoGrid({
+                autoBind: false,
+                dataSource: {
+                    transport: {
+                        read: {
+                            url: dataUrl,
+                            dataType: "json",
+                            data: function () {
+                                return {
+                                    country: $("#country").val()
+                                };
+                            }
+                        }
+                    },
+                    pageSize: 10
+                },
+                pageable: true,
+                sortable: true,
+                noRecords: {
+                    template: "No se encontraron clientes para el país especificado."
+                },
+                columns: [
+                    {
+                        field: "CustomerID",
+                        title: "Customer Id",
+                        width: "140px",
+                        template: function (dataItem) {
+                            var url = ordersBaseUrl + "?id=" +
+                                encodeURIComponent(dataItem.CustomerID);
+
+                            return '<a href="' + url +
+                                '" class="crm-link">' +
+                                kendo.htmlEncode(dataItem.CustomerID) +
+                                '</a>';
+                        }
+                    },
+                    { field: "CompanyName", title: "Company Name" },
+                    { field: "ContactName", title: "Contact Name" },
+                    { field: "Phone", title: "Phone", width: "160px" },
+                    { field: "Fax", title: "Fax", width: "160px" }
+                ]
+            }).data("kendoGrid");
+
+            function showGridIfHidden() {
+                var wrapper = $("#customersGridWrapper");
+                if (wrapper.is(":hidden")) {
+                    wrapper.fadeIn(150);
+                }
+            }
+
+            function search() {
+                var value = $("#country").val().trim();
+
+                if (!value) {
+                    $("#customersGridWrapper").hide();
+                    grid.dataSource.data([]);
+                    return;
+                }
+
+                showGridIfHidden();
+                grid.dataSource.page(1);
+                grid.dataSource.read();
+            }
+
+            $("#countrySearchForm").on("submit", function (e) {
+                e.preventDefault();
+                search();
+            });
+
+            if (initialCountry && initialCountry.length > 0) {
+                $("#customersGridWrapper").show();
+                grid.dataSource.page(1);
+                grid.dataSource.read();
+            }
+        });
+    </script>
+}

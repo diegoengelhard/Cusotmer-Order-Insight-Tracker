@@ -1,0 +1,79 @@
+@model IEnumerable<Creativa.Web.Models.Order>
+
+@{
+    ViewData["Title"] = "Northwind Orders";
+    var customerId = ViewBag.CustomerID as string;
+    var customerName = ViewBag.CustomerName as string;
+}
+
+<div class="crm-page">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h1 class="crm-title mb-1">Northwind Orders</h1>
+            <p class="text-muted mb-0">
+                Pedidos de: <strong>@customerName</strong> (@customerId)
+            </p>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <a asp-action="CustomersByCountry"
+           asp-controller="Customers"
+           class="btn btn-link px-0 crm-back-link">
+            Volver a clientes por país
+        </a>
+    </div>
+
+    <div class="crm-card p-3 p-md-4">
+        <div id="ordersGrid"></div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var customerId = '@customerId';
+            var dataUrl = '@Url.Action("CustomerOrdersData", "Customers")';
+
+            $("#ordersGrid").kendoGrid({
+                dataSource: {
+                    transport: {
+                        read: {
+                            url: dataUrl,
+                            dataType: "json",
+                            data: {
+                                customerId: customerId
+                            }
+                        }
+                    },
+                    pageSize: 10,
+                    sort: {
+                        field: "ShippedDate",
+                        dir: "asc"
+                    }
+                },
+                pageable: true,
+                sortable: true,
+                noRecords: {
+                    template: "Este cliente no tiene pedidos registrados."
+                },
+                columns: [
+                    { field: "OrderID", title: "Order Id", width: "140px" },
+                    { field: "CustomerID", title: "Customer Id", width: "140px" },
+                    {
+                        field: "OrderDate",
+                        title: "Order Date",
+                        width: "180px",
+                        format: "{0:yyyy-MM-dd}"
+                    },
+                    {
+                        field: "ShippedDate",
+                        title: "Shipped Date",
+                        width: "180px",
+                        format: "{0:yyyy-MM-dd}"
+                    },
+                ]
+            });
+        });
+    </script>
+}
