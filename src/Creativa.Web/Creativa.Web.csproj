@@ -6,4 +6,10 @@
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- CoreWCF -->
+    <PackageReference Include="CoreWCF.Http" Version="1.5.1" />
+    <PackageReference Include="CoreWCF.Primitives" Version="1.5.1" />
+  </ItemGroup>
+
 </Project>
