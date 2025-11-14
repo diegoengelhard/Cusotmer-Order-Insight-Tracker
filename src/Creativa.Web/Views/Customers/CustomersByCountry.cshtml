@@ -1,27 +1,21 @@
-@model IEnumerable<Creativa.Web.Models.Customer>
-
 @{
     ViewData["Title"] = "Northwind Customers";
     var country = (ViewBag.Country as string) ?? "";
 }
 
 <div class="crm-page" ng-app="NorthwindApp" ng-controller="CustomerSearchCtrl">
-    @* Heading *@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
             <h1 class="crm-title mb-1">Clientes por país</h1>
         </div>
     </div>
 
-    @* Search Section - Controlled by Angular *@
     <div class="crm-card crm-card-search p-3 p-md-4 mb-3">
         <form ng-submit="searchCustomers()" name="searchForm" novalidate>
             <div class="row g-2 align-items-center">
                 <div class="col-md-7">
                     <div class="input-group crm-search-group">
-                        <span class="input-group-text crm-search-icon">
-                            🔍
-                        </span>
+                        <span class="input-group-text crm-search-icon">🔍</span>
                         <input type="text"
                                class="form-control crm-search-input"
                                id="country"
@@ -35,9 +29,7 @@
                     </small>
                 </div>
                 <div class="col-auto">
-                    <button type="submit" class="btn btn-primary px-4">
-                        Buscar
-                    </button>
+                    <button type="submit" class="btn btn-primary px-4">Buscar</button>
                 </div>
             </div>
             <p class="crm-search-hint mt-2 mb-0">
@@ -46,13 +38,10 @@
         </form>
     </div>
 
-    @* Results Card (Kendo Grid) *@
     <div id="customersGridWrapper" class="crm-card crm-card-results p-0" ng-show="gridVisible">
         <div class="p-3 p-md-4 pb-2 border-bottom-light">
             <h2 class="crm-subtitle mb-1">Resultados</h2>
-            <p class="text-muted small mb-0">
-                Listado de clientes filtrados por país.
-            </p>
+            <p class="text-muted small mb-0">Listado de clientes filtrados por país.</p>
         </div>
         <div class="p-0">
             <div id="customersGrid"></div>
@@ -61,31 +50,40 @@
 </div>
 
 @section Scripts {
+    <script src="~/js/wcf-helper.js"></script>
     <script>
-        // AngularJS Controller
         northwindApp.controller('CustomerSearchCtrl', function($scope) {
             $scope.searchQuery = '@country';
             $scope.gridVisible = false;
-            
-            var dataUrl = '@Url.Action("CustomersByCountryData", "Customers")';
+
             var ordersBaseUrl = '@Url.Action("CustomerOrdersInformation", "Customers")';
 
             var grid = $("#customersGrid").kendoGrid({
                 autoBind: false,
-                dataSource: {
+                dataSource: new kendo.data.DataSource({
                     transport: {
-                        read: {
-                            url: dataUrl,
-                            dataType: "json",
-                            data: function () {
-                                return {
-                                    country: $scope.searchQuery
-                                };
+                        read: function(options) {
+                            if (!$scope.searchQuery) {
+                                options.success([]);
+                                return;
                             }
+
+                            WcfHelper.getCustomersByCountry($scope.searchQuery)
+                                .done(function(data) {
+                                    options.success(data);
+                                })
+                                .fail(function(error) {
+                                    console.error('WCF Error:', error);
+                                    options.error(error);
+                                });
                         }
                     },
-                    pageSize: 10
-                },
+                    pageSize: 10,
+                    schema: {
+                        data: function(response) { return response; },
+                        total: function(response) { return response.length; }
+                    }
+                }),
                 pageable: true,
                 sortable: true,
                 noRecords: {
@@ -97,13 +95,9 @@
                         title: "Customer Id",
                         width: "140px",
                         template: function (dataItem) {
-                            var url = ordersBaseUrl + "?id=" +
-                                encodeURIComponent(dataItem.customerID);
-
-                            return '<a href="' + url +
-                                '" class="crm-link">' +
-                                kendo.htmlEncode(dataItem.customerID) +
-                                '</a>';
+                            var url = ordersBaseUrl + "?id=" + encodeURIComponent(dataItem.customerID);
+                            return '<a href="' + url + '" class="crm-link">' + 
+                                   kendo.htmlEncode(dataItem.customerID) + '</a>';
                         }
                     },
                     { field: "companyName", title: "Company Name" },
@@ -113,7 +107,6 @@
                 ]
             }).data("kendoGrid");
 
-            // Angular submit handler
             $scope.searchCustomers = function() {
                 if (!$scope.searchQuery || $scope.searchQuery.trim() === '') {
                     $scope.gridVisible = false;
@@ -126,7 +119,6 @@
                 grid.dataSource.read();
             };
 
-            // Initial load if country is provided
             if ($scope.searchQuery && $scope.searchQuery.length > 0) {
                 $scope.gridVisible = true;
                 grid.dataSource.page(1);

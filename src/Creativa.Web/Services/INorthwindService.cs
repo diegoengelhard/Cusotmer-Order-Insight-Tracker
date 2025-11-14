@@ -4,7 +4,7 @@ using Creativa.Web.Models;
 
 namespace Creativa.Web.Services
 {
-    [ServiceContract]
+    [ServiceContract(Namespace = "http://tempuri.org/")]
     public interface INorthwindService
     {
         [OperationContract]

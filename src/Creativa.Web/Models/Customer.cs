@@ -1,11 +1,26 @@
-namespace Creativa.Web.Models;
+using System.Runtime.Serialization;
 
-public class Customer
+namespace Creativa.Web.Models
 {
-    public string CustomerID { get; set; } = "";
-    public string CompanyName { get; set; } = "";
-    public string? ContactName { get; set; }
-    public string? Country { get; set; }
-    public string? Phone { get; set; }
-    public string? Fax { get; set; }
+    [DataContract]
+    public class Customer
+    {
+        [DataMember]
+        public string CustomerID { get; set; } = string.Empty;
+
+        [DataMember]
+        public string CompanyName { get; set; } = string.Empty;
+
+        [DataMember]
+        public string? ContactName { get; set; }
+
+        [DataMember]
+        public string? Country { get; set; }
+
+        [DataMember]
+        public string? Phone { get; set; }
+
+        [DataMember]
+        public string? Fax { get; set; }
+    }
 }

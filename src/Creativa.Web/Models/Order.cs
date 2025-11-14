@@ -1,9 +1,20 @@
-namespace Creativa.Web.Models;
+using System.Runtime.Serialization;
 
-public class Order
+namespace Creativa.Web.Models
 {
-    public int OrderID { get; set; }
-    public string? CustomerID { get; set; }
-    public DateTime? OrderDate { get; set; }
-    public DateTime? ShippedDate { get; set; }
+    [DataContract]
+    public class Order
+    {
+        [DataMember]
+        public int OrderID { get; set; }
+
+        [DataMember]
+        public string? CustomerID { get; set; }
+
+        [DataMember]
+        public DateTime? OrderDate { get; set; }
+
+        [DataMember]
+        public DateTime? ShippedDate { get; set; }
+    }
 }
