@@ -9,6 +9,7 @@ The project follows a traditional server-rendered web application model, enhance
 *   **Backend**: A robust API and web server built with **C#** and **ASP.NET Core 8**. It uses an **Entity Framework Core** data layer to communicate with a **SQL Server** database. A **CoreWCF** service is also implemented to expose business logic, although the frontend primarily communicates via MVC controller actions.
 *   **Frontend**: A server-rendered UI using **Razor Views (.cshtml)**. The user interface is made interactive with **AngularJS** for handling user input and **Kendo UI** for displaying data in powerful grids. The layout is styled using **Bootstrap**.
 *   **Database**: The application relies on the classic **Northwind** database, which is set up manually on a local SQL Server instance.
+*   **Resilience & Fallback Strategy**: The application automatically checks the SQL Server connection at startup (with 3 retry attempts). If the connection fails, it **automatically falls back to CSV files** (`data/customers.csv`, `data/orders.csv`) to ensure the application remains functional even without a database.
 *   **Request Logging**: A custom **Action Filter** (`WebTrackerActionFilter`) intercepts all incoming requests and logs them to a CSV file (`data/webtracker.csv`) for auditing purposes.
 
 ## **Local Setup and Execution Guide**
@@ -18,16 +19,16 @@ Follow these steps to get the project running on your local machine.
 ### **Prerequisites**
 
 *   .NET 8 SDK
-*   SQL Server (a local instance, or Docker container)
-*   `sqlcmd` utility (part of SQL Server command-line tools)
+*   SQL Server (a local instance, or Docker container) - **Optional** (see fallback behavior below)
+*   `sqlcmd` utility (part of SQL Server command-line tools) - **Optional**
 
-### **1. Database Setup**
+### **1. Database Setup (Optional)**
 
-The application requires the Northwind database. The setup script is included in the repository.
+The application requires the Northwind database **only if you want to use SQL Server**. If SQL Server is unavailable, the app will automatically use the CSV files in the `data/` directory.
 
 ```bash
 # 1. Navigate to the project root directory
-cd /root/to/project
+cd /path/to/creativa-tech-int
 
 # 2. Create the Northwind database
 # Replace 'YourStrong@Passw0rd123' with your actual SA password
