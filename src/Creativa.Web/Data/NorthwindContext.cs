@@ -12,6 +12,7 @@ namespace Creativa.Web.Data
 
         public DbSet<Customer> Customers { get; set; } = null!;
         public DbSet<Order> Orders { get; set; } = null!;
+        public DbSet<WebTracker> WebTracker { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -34,6 +35,15 @@ namespace Creativa.Web.Data
                 entity.Property(e => e.CustomerID).HasMaxLength(5).IsRequired(false);
                 entity.Property(e => e.OrderDate).IsRequired(false);
                 entity.Property(e => e.ShippedDate).IsRequired(false);
+            });
+
+            modelBuilder.Entity<WebTracker>(entity =>
+            {
+                entity.ToTable("webTracker");
+                entity.HasKey(e => e.Id);
+                entity.Property(e => e.URLRequest).HasMaxLength(500).IsRequired();
+                entity.Property(e => e.SourceIp).HasMaxLength(50).IsRequired();
+                entity.Property(e => e.TimeOfAction).IsRequired();
             });
         }
     }

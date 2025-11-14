@@ -3,27 +3,24 @@ using Creativa.Web.Services;
 
 namespace Creativa.Web.Filters
 {
-    public class WebTrackerActionFilter : IActionFilter
+    public class WebTrackerActionFilter : IAsyncActionFilter
     {
-        private readonly WebTrackerService _tracker;
+        private readonly WebTrackerService _trackerService;
 
-        public WebTrackerActionFilter(WebTrackerService tracker)
+        public WebTrackerActionFilter(WebTrackerService trackerService)
         {
-            _tracker = tracker;
+            _trackerService = trackerService;
         }
 
-        public void OnActionExecuting(ActionExecutingContext context)
+        public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
             var request = context.HttpContext.Request;
-            var urlRequest = request.Path + request.QueryString;
-            var sourceIp = context.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown";
+            var url = $"{request.Path}{request.QueryString}";
+            var ip = context.HttpContext.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
 
-            _tracker.Track(urlRequest, sourceIp);
-        }
+            await _trackerService.LogRequestAsync(url, ip);
 
-        public void OnActionExecuted(ActionExecutedContext context)
-        {
-            // No action needed after execution
+            await next();
         }
     }
 }

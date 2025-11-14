@@ -17,18 +17,20 @@ builder.Services.AddControllersWithViews(options =>
     options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 });
 
-// Register SQL Server DbContext (will be used if connection succeeds)
+// Register SQL Server DbContext
 builder.Services.AddDbContext<NorthwindContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("NorthwindConnection")));
 
 // Register CSV fallback repository
 builder.Services.AddSingleton<NorthwindCsvRepository>();
 
-// Register SQL service (will fallback to CSV if DB unavailable)
+// Register SQL service
 builder.Services.AddScoped<NorthwindSqlService>();
 
-// Register singleton services
-builder.Services.AddSingleton<WebTrackerService>();
+// Register WebTrackerService (now uses SQL Server)
+builder.Services.AddScoped<WebTrackerService>();
+
+// Register DatabaseHealthChecker
 builder.Services.AddSingleton<DatabaseHealthChecker>();
 
 builder.Services.AddServiceModelServices();
@@ -36,13 +38,12 @@ builder.Services.AddServiceModelMetadata();
 
 var app = builder.Build();
 
-// CHECK DATABASE CONNECTION AT STARTUP
+// Check database connection at startup
 using (var scope = app.Services.CreateScope())
 {
     var healthChecker = scope.ServiceProvider.GetRequiredService<DatabaseHealthChecker>();
     var isSqlServerAvailable = await healthChecker.CheckConnectionAsync();
 
-    // Store the result in application state for runtime checks
     app.Services.GetRequiredService<IConfiguration>()["DatabaseAvailable"] = isSqlServerAvailable.ToString();
 }
 
