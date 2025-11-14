@@ -2,6 +2,7 @@ using CoreWCF;
 using CoreWCF.Configuration;
 using CoreWCF.Description;
 using Creativa.Web.Services;
+using Creativa.Web.Filters;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,7 +13,11 @@ builder.WebHost.ConfigureKestrel((context, options) =>
 });
 
 builder.Services
-    .AddControllersWithViews()
+    .AddControllersWithViews(options =>
+    {
+        // Registrar filtro global para WebTracker
+        options.Filters.Add<WebTrackerActionFilter>();
+    })
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = null; // Preserva PascalCase
@@ -20,6 +25,9 @@ builder.Services
 
 // Shared repository for Northwind data
 builder.Services.AddSingleton<NorthwindCsvRepository>();
+
+// WebTracker service
+builder.Services.AddSingleton<WebTrackerService>();
 
 // WCF service
 builder.Services.AddSingleton<NorthwindService>();

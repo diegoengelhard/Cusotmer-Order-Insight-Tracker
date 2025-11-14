@@ -25,3 +25,5 @@
 Thumbs.db
 
 appsettings.*.Local.json
+
+data/webtracker.csv
