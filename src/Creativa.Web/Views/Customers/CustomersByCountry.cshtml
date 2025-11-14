@@ -5,7 +5,7 @@
     var country = (ViewBag.Country as string) ?? "";
 }
 
-<div class="crm-page">
+<div class="crm-page" ng-app="NorthwindApp" ng-controller="CustomerSearchCtrl">
     @* Heading *@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
@@ -13,9 +13,9 @@
         </div>
     </div>
 
-    @* Search Section *@
+    @* Search Section - Controlled by Angular *@
     <div class="crm-card crm-card-search p-3 p-md-4 mb-3">
-        <form asp-action="CustomersByCountry" method="get" id="countrySearchForm">
+        <form ng-submit="searchCustomers()" name="searchForm" novalidate>
             <div class="row g-2 align-items-center">
                 <div class="col-md-7">
                     <div class="input-group crm-search-group">
@@ -26,9 +26,13 @@
                                class="form-control crm-search-input"
                                id="country"
                                name="country"
-                               value="@country"
+                               ng-model="searchQuery"
+                               ng-required="true"
                                placeholder="Buscar por país (ej. Germany, USA, Mexico)..." />
                     </div>
+                    <small class="text-danger" ng-show="searchForm.$submitted && searchForm.country.$error.required">
+                        Por favor ingresa un país
+                    </small>
                 </div>
                 <div class="col-auto">
                     <button type="submit" class="btn btn-primary px-4">
@@ -43,7 +47,7 @@
     </div>
 
     @* Results Card (Kendo Grid) *@
-    <div id="customersGridWrapper" class="crm-card crm-card-results p-0" style="display:none;">
+    <div id="customersGridWrapper" class="crm-card crm-card-results p-0" ng-show="gridVisible">
         <div class="p-3 p-md-4 pb-2 border-bottom-light">
             <h2 class="crm-subtitle mb-1">Resultados</h2>
             <p class="text-muted small mb-0">
@@ -58,8 +62,11 @@
 
 @section Scripts {
     <script>
-        $(document).ready(function () {
-            var initialCountry = '@country';
+        // AngularJS Controller
+        northwindApp.controller('CustomerSearchCtrl', function($scope) {
+            $scope.searchQuery = '@country';
+            $scope.gridVisible = false;
+            
             var dataUrl = '@Url.Action("CustomersByCountryData", "Customers")';
             var ordersBaseUrl = '@Url.Action("CustomerOrdersInformation", "Customers")';
 
@@ -72,7 +79,7 @@
                             dataType: "json",
                             data: function () {
                                 return {
-                                    country: $("#country").val()
+                                    country: $scope.searchQuery
                                 };
                             }
                         }
@@ -106,34 +113,22 @@
                 ]
             }).data("kendoGrid");
 
-            function showGridIfHidden() {
-                var wrapper = $("#customersGridWrapper");
-                if (wrapper.is(":hidden")) {
-                    wrapper.fadeIn(150);
-                }
-            }
-
-            function search() {
-                var value = $("#country").val().trim();
-
-                if (!value) {
-                    $("#customersGridWrapper").hide();
+            // Angular submit handler
+            $scope.searchCustomers = function() {
+                if (!$scope.searchQuery || $scope.searchQuery.trim() === '') {
+                    $scope.gridVisible = false;
                     grid.dataSource.data([]);
                     return;
                 }
 
-                showGridIfHidden();
+                $scope.gridVisible = true;
                 grid.dataSource.page(1);
                 grid.dataSource.read();
-            }
+            };
 
-            $("#countrySearchForm").on("submit", function (e) {
-                e.preventDefault();
-                search();
-            });
-
-            if (initialCountry && initialCountry.length > 0) {
-                $("#customersGridWrapper").show();
+            // Initial load if country is provided
+            if ($scope.searchQuery && $scope.searchQuery.length > 0) {
+                $scope.gridVisible = true;
                 grid.dataSource.page(1);
                 grid.dataSource.read();
             }
