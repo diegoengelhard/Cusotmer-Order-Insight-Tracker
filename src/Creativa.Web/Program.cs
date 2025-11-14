@@ -1,41 +1,31 @@
 using CoreWCF;
 using CoreWCF.Configuration;
-using CoreWCF.Description;
-using Creativa.Web.Services;
+using Creativa.Web.Data;
 using Creativa.Web.Filters;
+using Creativa.Web.Services;
+using Microsoft.EntityFrameworkCore;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// CoreWCF config to allow synchronous IO
-builder.WebHost.ConfigureKestrel((context, options) =>
+builder.Services.AddControllersWithViews(options =>
 {
-    options.AllowSynchronousIO = true;
+    options.Filters.Add<WebTrackerActionFilter>();
+}).AddJsonOptions(options =>
+{
+    // ✅ Configurar JSON para usar camelCase
+    options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 });
 
-builder.Services
-    .AddControllersWithViews(options =>
-    {
-        // Registrar filtro global para WebTracker
-        options.Filters.Add<WebTrackerActionFilter>();
-    })
-    .AddJsonOptions(options =>
-    {
-        options.JsonSerializerOptions.PropertyNamingPolicy = null; // Preserva PascalCase
-    });
+builder.Services.AddDbContext<NorthwindContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("NorthwindConnection")));
 
-// Shared repository for Northwind data
-builder.Services.AddSingleton<NorthwindCsvRepository>();
-
-// WebTracker service
+builder.Services.AddScoped<NorthwindSqlService>();
 builder.Services.AddSingleton<WebTrackerService>();
 
-// WCF service
-builder.Services.AddSingleton<NorthwindService>();
-
-// CoreWCF: base services
 builder.Services.AddServiceModelServices();
 builder.Services.AddServiceModelMetadata();
-builder.Services.AddSingleton<IServiceBehavior, UseRequestHeadersForMetadataAddressBehavior>();
 
 var app = builder.Build();
 
@@ -47,24 +37,20 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
 app.UseRouting();
 app.UseAuthorization();
 
-// MVC default route
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Customers}/{action=CustomersByCountry}/{id?}");
 
-// CoreWCF: map the service
 app.UseServiceModel(serviceBuilder =>
 {
-    serviceBuilder.AddService<NorthwindService>(options =>
+    serviceBuilder.AddService<NorthwindSqlService>(options =>
     {
         options.BaseAddresses.Add(new Uri("http://localhost/NorthwindService"));
     });
-
-    serviceBuilder.AddServiceEndpoint<NorthwindService, INorthwindService>(
+    serviceBuilder.AddServiceEndpoint<NorthwindSqlService, INorthwindService>(
         new BasicHttpBinding(),
         "/basichttp");
 });

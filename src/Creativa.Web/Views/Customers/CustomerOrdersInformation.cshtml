@@ -2,8 +2,7 @@
 
 @{
     ViewData["Title"] = "Northwind Orders";
-    var customerId = ViewBag.CustomerID as string;
-    var customerName = ViewBag.CustomerName as string;
+    var customerId = ViewBag.CustomerId as string;
 }
 
 <div class="crm-page">
@@ -11,7 +10,7 @@
         <div>
             <h1 class="crm-title mb-1">Northwind Orders</h1>
             <p class="text-muted mb-0">
-                Pedidos de: <strong>@customerName</strong> (@customerId)
+                Pedidos de: <strong>@customerId</strong>
             </p>
         </div>
     </div>
@@ -20,7 +19,7 @@
         <a asp-action="CustomersByCountry"
            asp-controller="Customers"
            class="btn btn-link px-0 crm-back-link">
-            Volver a clientes por país
+            ← Volver a clientes por país
         </a>
     </div>
 
@@ -33,23 +32,21 @@
     <script>
         $(document).ready(function () {
             var customerId = '@customerId';
-            var dataUrl = '@Url.Action("CustomerOrdersData", "Customers")';
 
             $("#ordersGrid").kendoGrid({
                 dataSource: {
-                    transport: {
-                        read: {
-                            url: dataUrl,
-                            dataType: "json",
-                            data: {
-                                customerId: customerId
+                    data: @Html.Raw(Json.Serialize(Model)),
+                    pageSize: 10,
+                    schema: {
+                        model: {
+                            id: "orderID",
+                            fields: {
+                                orderID: { type: "number" },
+                                customerID: { type: "string" },
+                                orderDate: { type: "date" },
+                                shippedDate: { type: "date" }
                             }
                         }
-                    },
-                    pageSize: 10,
-                    sort: {
-                        field: "ShippedDate",
-                        dir: "asc"
                     }
                 },
                 pageable: true,
@@ -58,20 +55,38 @@
                     template: "Este cliente no tiene pedidos registrados."
                 },
                 columns: [
-                    { field: "OrderID", title: "Order Id", width: "140px" },
-                    { field: "CustomerID", title: "Customer Id", width: "140px" },
+                    { 
+                        field: "orderID", 
+                        title: "Order Id", 
+                        width: "140px" 
+                    },
+                    { 
+                        field: "customerID", 
+                        title: "Customer Id", 
+                        width: "140px" 
+                    },
                     {
-                        field: "OrderDate",
+                        field: "orderDate",
                         title: "Order Date",
                         width: "180px",
-                        format: "{0:yyyy-MM-dd}"
+                        format: "{0:yyyy-MM-dd}",
+                        template: function(dataItem) {
+                            if (!dataItem.orderDate) return "-";
+                            var date = kendo.parseDate(dataItem.orderDate);
+                            return kendo.toString(date, "yyyy-MM-dd");
+                        }
                     },
                     {
-                        field: "ShippedDate",
+                        field: "shippedDate",
                         title: "Shipped Date",
                         width: "180px",
-                        format: "{0:yyyy-MM-dd}"
-                    },
+                        format: "{0:yyyy-MM-dd}",
+                        template: function(dataItem) {
+                            if (!dataItem.shippedDate) return "-";
+                            var date = kendo.parseDate(dataItem.shippedDate);
+                            return kendo.toString(date, "yyyy-MM-dd");
+                        }
+                    }
                 ]
             });
         });

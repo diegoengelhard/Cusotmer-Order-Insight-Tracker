@@ -93,23 +93,23 @@
                 },
                 columns: [
                     {
-                        field: "CustomerID",
+                        field: "customerID",
                         title: "Customer Id",
                         width: "140px",
                         template: function (dataItem) {
                             var url = ordersBaseUrl + "?id=" +
-                                encodeURIComponent(dataItem.CustomerID);
+                                encodeURIComponent(dataItem.customerID);
 
                             return '<a href="' + url +
                                 '" class="crm-link">' +
-                                kendo.htmlEncode(dataItem.CustomerID) +
+                                kendo.htmlEncode(dataItem.customerID) +
                                 '</a>';
                         }
                     },
-                    { field: "CompanyName", title: "Company Name" },
-                    { field: "ContactName", title: "Contact Name" },
-                    { field: "Phone", title: "Phone", width: "160px" },
-                    { field: "Fax", title: "Fax", width: "160px" }
+                    { field: "companyName", title: "Company Name" },
+                    { field: "contactName", title: "Contact Name" },
+                    { field: "phone", title: "Phone", width: "160px" },
+                    { field: "fax", title: "Fax", width: "160px" }
                 ]
             }).data("kendoGrid");
 
