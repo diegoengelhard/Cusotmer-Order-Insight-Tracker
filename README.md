@@ -1,16 +1,16 @@
 # Customer Order Insight Tracker
 
-Customer Order Insight Tracker is a lightweight web application built with ASP.NET Core, designed to provide quick insights into the Northwind database. It allows users to search for customers by country and view their corresponding order history. The application also features a custom middleware to track and log all incoming web requests.
+Customer Order Insight Tracker is a lightweight web application built with ASP.NET Core, designed to provide quick insights into the Northwind database. It allows users to search for customers by country and view their corresponding order history. The application also features a custom action filter to track and log all incoming web requests directly to a SQL Server database.
 
 ## **Architecture Overview**
 
 The project follows a traditional server-rendered web application model, enhanced with client-side libraries for a dynamic user experience.
 
-*   **Backend**: A robust API and web server built with **C#** and **ASP.NET Core 8**. It uses an **Entity Framework Core** data layer to communicate with a **SQL Server** database. A **CoreWCF** service is also implemented to expose business logic, although the frontend primarily communicates via MVC controller actions.
-*   **Frontend**: A server-rendered UI using **Razor Views (.cshtml)**. The user interface is made interactive with **AngularJS** for handling user input and **Kendo UI** for displaying data in powerful grids. The layout is styled using **Bootstrap**.
+*   **Backend**: A robust API and web server built with **C#** and **ASP.NET Core 8**. It uses an **Entity Framework Core** data layer to communicate with a **SQL Server** database. A **CoreWCF** service is implemented to expose all business logic via SOAP.
+*   **Frontend**: A server-rendered UI using **Razor Views (.cshtml)**. The user interface is made interactive with **AngularJS** for handling user input and **Kendo UI** for displaying data in powerful grids. The Kendo DataSource is configured to communicate **directly with the CoreWCF SOAP service**.
 *   **Database**: The application relies on the classic **Northwind** database, which is set up manually on a local SQL Server instance.
-*   **Resilience & Fallback Strategy**: The application automatically checks the SQL Server connection at startup (with 3 retry attempts). If the connection fails, it **automatically falls back to CSV files** (`data/customers.csv`, `data/orders.csv`) to ensure the application remains functional even without a database.
-*   **Request Logging**: A custom **Action Filter** (`WebTrackerActionFilter`) intercepts all incoming requests and logs them to a CSV file (`data/webtracker.csv`) for auditing purposes.
+*   **Resilience & Fallback Strategy**: The application automatically checks the SQL Server connection at startup (with 3 retry attempts). If the connection fails, it **automatically falls back to local CSV files** (`data/customers.csv`, `data/orders.csv`) to ensure the application remains functional even without a database.
+*   **Request Logging**: A custom **Action Filter** (`WebTrackerActionFilter`) intercepts all incoming requests and logs them to the `webTracker` table in the **SQL Server database** for auditing purposes.
 
 ## **Local Setup and Execution Guide**
 
@@ -55,7 +55,7 @@ The ASP.NET Core project serves both the backend logic and the frontend views.
 
 ```bash
 # 1. Navigate to the web project directory
-cd /src/Creativa.Web
+cd src/Creativa.Web
 
 # 2. Restore dependencies and build the project
 dotnet build
@@ -75,89 +75,73 @@ This section outlines the key technical choices made during the project's develo
 *   **ASP.NET Core 8**: Chosen for its high performance, cross-platform capabilities, and modern development features like built-in dependency injection and configuration management.
 *   **Entity Framework Core**: Used as the Object-Relational Mapper (ORM) to abstract database interactions. This allows for writing clean, strongly-typed data access code in C# instead of raw SQL. The database context and models are defined in `src/Creativa.Web/Data/NorthwindContext.cs`.
 *   **SQL Server**: A robust, enterprise-grade relational database that is a natural fit for the .NET ecosystem and the provided `instnwnd.sql` script.
-*   **CoreWCF**: Included to fulfill the requirement of exposing a WCF service. The service contract is defined in `INorthwindService.cs` and implemented in `NorthwindSqlService.cs`. While the frontend uses MVC actions, this demonstrates the ability to integrate legacy-style service contracts.
-*   **MVC Action Filter for Logging**: A custom filter, `WebTrackerActionFilter`, was implemented to meet the request tracking requirement. This is a clean, non-invasive approach that automatically intercepts all controller actions without modifying their code.
+*   **CoreWCF**: Included to fulfill the requirement of exposing a WCF service. The service contract is defined in `INorthwindService.cs` and is directly consumed by the frontend's Kendo DataSource, demonstrating the ability to integrate legacy-style service contracts in a modern web application.
+*   **Action Filter for Logging**: A custom filter, `WebTrackerActionFilter`, was implemented to meet the request tracking requirement. This is a clean, non-invasive approach that automatically intercepts all controller actions and logs the request details to the `webTracker` table in SQL Server.
 
 ### **Frontend**
 
 *   **Razor Views**: The standard server-side templating engine for ASP.NET Core. It allows for generating HTML on the server, which is ideal for this project's scope.
 *   **AngularJS & Kendo UI**: Chosen to meet the specific requirements of the technical challenge. AngularJS handles the client-side logic for the search functionality, while Kendo UI provides powerful and feature-rich data grids (`kendoGrid`) for displaying customer and order data.
-*   **jQuery**: Used as a dependency for both Bootstrap and Kendo UI, and for simplifying DOM manipulation in the Razor views.
-*   **JSON Serialization (`camelCase`)**: The backend is explicitly configured in `Program.cs` to serialize JSON responses with `camelCase` property names. This is a modern web standard and ensures seamless compatibility with JavaScript libraries like Kendo UI, which expect this format.
+*   **jQuery & Custom SOAP Helper**: jQuery is used as a dependency for Kendo UI. A custom helper, `wcf-helper.js`, was created to build SOAP envelopes, make AJAX calls to the WCF service, and parse the XML responses, correctly handling XML namespaces. This helper acts as the bridge between Kendo UI and the SOAP backend.
 
 ## **API Testing Guide (cURL)**
 
-You can test the backend endpoints directly using a command-line tool like `cURL`.
+You can test the WCF service and check the database logging.
 
-### **1. Get Customers by Country**
+### **1. Get Customers by Country (SOAP)**
 
-This endpoint retrieves a list of customers for a given country.
-
-*   **Request**:
-    ```bash
-    curl -s "http://localhost:5084/Customers/CustomersByCountryData?country=Germany"
-    ```
-
-*   **Expected Response (200 OK)**: A JSON array of customer objects.
-    ```json
-    [
-      {
-        "customerID": "ALFKI",
-        "companyName": "Alfreds Futterkiste",
-        "contactName": "Maria Anders",
-        "country": "Germany",
-        "phone": "030-0074321",
-        "fax": "030-0076545"
-      },
-      {
-        "customerID": "BLAUS",
-        "companyName": "Blauer See Delikatessen",
-        "contactName": "Hanna Moos",
-        "country": "Germany",
-        "phone": "0621-08460",
-        "fax": "0621-08924"
-      }
-    ]
-    ```
-
-### **2. Get Orders for a Customer**
-
-This endpoint retrieves the HTML page containing the orders for a specific customer.
+This endpoint retrieves a list of customers for a given country via a SOAP request.
 
 *   **Request**:
     ```bash
-    curl "http://localhost:5084/Customers/CustomerOrdersInformation?id=ALFKI"
+    curl -X POST http://localhost:5084/NorthwindService/basichttp \
+    -H "Content-Type: text/xml; charset=utf-8" \
+    -H "SOAPAction: http://tempuri.org/INorthwindService/GetCustomersByCountry" \
+    -d '<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/"><soap:Body><tem:GetCustomersByCountry><tem:country>Germany</tem:country></tem:GetCustomersByCountry></soap:Body></soap:Envelope>'
     ```
 
-*   **Expected Response (200 OK)**: The full HTML content of the customer orders page. The response will contain a Kendo Grid populated with the order data for customer `ALFKI`.
+*   **Expected Response (200 OK)**: A SOAP envelope containing an array of customer objects.
 
-### **3. Check Request Tracking**
+### **2. Get Orders for a Customer (SOAP)**
 
-After making a few requests, you can verify that they were logged.
+This endpoint retrieves the orders for a specific customer via a SOAP request.
 
 *   **Request**:
     ```bash
-    tail -n 5 data/webtracker.csv
+    curl -X POST http://localhost:5084/NorthwindService/basichttp \
+    -H "Content-Type: text/xml; charset=utf-8" \
+    -H "SOAPAction: http://tempuri.org/INorthwindService/GetOrdersByCustomer" \
+    -d '<?xml version="1.0" encoding="utf-8"?><soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tem="http://tempuri.org/"><soap:Body><tem:GetOrdersByCustomer><tem:customerId>ALFKI</tem:customerId></tem:GetOrdersByCustomer></soap:Body></soap:Envelope>'
     ```
 
-*   **Expected Response**: The last few lines of the CSV log file, showing the tracked requests.
-    ```csv
-    43,/Customers/CustomersByCountry?country=Germany,::1,2025-11-14T05:24:40.6500319Z
-    44,/Customers/CustomerOrdersInformation?id=ALFKI,::1,2025-11-14T05:24:49.5013795Z
+*   **Expected Response (200 OK)**: A SOAP envelope containing the order data for customer `ALFKI`.
+
+### **3. Check Request Tracking in SQL Server**
+
+After making a few requests in the web application, you can verify that they were logged in the database.
+
+*   **Request (using `sqlcmd`)**:
+    ```bash
+    # Replace 'YourStrong@Passw0rd123' with your actual SA password
+    /opt/mssql-tools18/bin/sqlcmd \
+      -S localhost,1433 \
+      -U sa \
+      -P 'YourStrong@Passw0rd123' \
+      -d Northwind \
+      -Q "SELECT TOP 5 * FROM webTracker ORDER BY TimeOfAction DESC;"
     ```
 
-You can visualize the logs at `data/webtracker.csv`
+*   **Expected Response**: The last few rows from the `webTracker` table, showing the tracked requests.
 
 ## **Key Project Files**
 
 | File Path                                                                       | Description                                                                                             |
 | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `src/Creativa.Web/Program.cs`                                                   | Main application entry point. Configures services, dependency injection, and middleware pipeline.     |
-| `src/Creativa.Web/Controllers/CustomersController.cs`                           | MVC controller that handles HTTP requests for customers and orders.                                     |
-| `src/Creativa.Web/Data/NorthwindContext.cs`                                     | Entity Framework Core `DbContext` for interacting with the Northwind database.                        |
-| `src/Creativa.Web/Services/NorthwindSqlService.cs`                              | Service class containing the business logic to query customer and order data via EF Core.             |
-| `src/Creativa.Web/Views/Customers/CustomersByCountry.cshtml`                    | Razor view with the AngularJS and Kendo UI grid for searching and displaying customers.               |
-| `src/Creativa.Web/Views/Customers/CustomerOrdersInformation.cshtml`             | Razor view that displays the Kendo UI grid for a specific customer's orders.                          |
-| `src/Creativa.Web/Filters/WebTrackerActionFilter.cs`                            | The action filter responsible for intercepting and logging all requests.                              |
-| `instnwnd.sql`                                                                  | The SQL script used to set up and populate the Northwind database.                                    |
-| `data/webtracker.csv`                                                           | The CSV file where all tracked web requests are stored.                                                 |
+| `src/Creativa.Web/Program.cs`                                                   | Main application entry point. Configures services, dependency injection, and the WCF middleware.      |
+| `src/Creativa.Web/Services/INorthwindService.cs`                                | The WCF service contract defining the operations for getting customers and orders.                    |
+| `src/Creativa.Web/Services/NorthwindSqlService.cs`                              | Service class implementing the WCF contract with business logic to query data via EF Core.            |
+| `src/Creativa.Web/wwwroot/js/wcf-helper.js`                                     | Custom JavaScript helper to handle SOAP requests and parse XML responses for Kendo UI.                |
+| `src/Creativa.Web/Views/Customers/CustomersByCountry.cshtml`                    | Razor view with the AngularJS and Kendo UI grid for searching and displaying customers via SOAP.      |
+| `src/Creativa.Web/Views/Customers/CustomerOrdersInformation.cshtml`             | Razor view that displays the Kendo UI grid for a specific customer's orders, loaded via SOAP.         |
+| `src/Creativa.Web/Filters/WebTrackerActionFilter.cs`                            | The action filter responsible for intercepting requests and logging them to the SQL database.         |
+| `instnwnd.sql`                                                                  | The SQL script used to set up and populate the Northwind database, including the `webTracker` table.  |
